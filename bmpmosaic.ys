@@ -1,0 +1,324 @@
+#----------------------------------------------------------------------
+# 
+#  4190.308 Computer Architecture (Fall 2018)
+#
+#  Project #5: Optimizing Performance on a Pipelined Y86-64 Processor
+#
+#  December 4, 2018
+#
+#  Jin-Soo Kim (jinsoo.kim@snu.ac.kr)
+#  Systems Software & Architecture Laboratory
+#  Dept. of Computer Science and Engineering
+#  Seoul National University
+#  http://csl.snu.ac.kr
+#
+#----------------------------------------------------------------------
+
+bmp_mosaic:
+	# imgptr is in %rdi
+	# width  is in %rsi
+	# height is in %rdx
+	# size 	 is in %rcx
+	#-----------------------------------------------------------------
+
+	# FILL HERE
+irmovq  $1, %r14
+rrmovq  %rcx, %r13
+subq    %r14, %r13
+#cmpq    $1, %rcx
+je    E1
+pushq    %rbx    # caller save rbx /rbp /rdi /rsi /rsp/ r12/ r13/ r14
+
+iaddq   $-72, %rsp
+irmovq  $3, %r14
+mulq    %r14, %rsi
+iaddq   $3, %rsi
+rrmovq  %rsi, %rbx
+#leaq    3(%rsi,%rsi,2), %rbx
+irmovq  $-4, %r14
+andq    %r14, %rbx
+rmmovq    %rbx, 56(%rsp)  # 56(%rsp) = c
+irmovq  $0, %r14
+rmmovq    %r14, (%rsp)
+jmp    T1
+L4:
+iaddq  $-1, %rdx
+rrmovq  %rdx, %rax
+#leaq    -1(%rdx), %rax
+mrmovq  (%rsp), %r14
+subq     %r14, %rax
+mrmovq  40(%rsp), %r14
+subq     %r14, %rax
+mrmovq  56(%rsp), %r14
+mulq     %r14, %rax
+mrmovq    8(%rsp), %rbx
+mrmovq  48(%rsp), %r14
+addq     %r14, %rbx
+irmovq  $3, %r14
+mulq    %r14, %rbx
+#leaq    (%rbx,%rbx,2), %rbx
+addq    %rbx, %rax
+addq    %rdi, %rax
+
+mrmovb  (%rax), %rbx
+#movzbq    (%rax), %rbx
+
+mrmovq  16(%rsp), %r14
+addq    %rbx, %r14
+rmmovq  %r14, 16(%rsp)
+
+mrmovb  1(%rax), %rbx
+#movzbq    1(%rax), %rbx
+
+mrmovq  24(%rsp),%r14
+addq    %rbx, %r14
+rmmovq  %r14, 24(%rsp)
+
+mrmovb  2(%rax), %rbx
+#movzbq    2(%rax), %rbx
+
+mrmovq  32(%rsp),%r14
+addq    %rbx, %r14
+rmmovq  %r14, 32(%rsp)
+
+irmovq  48(%rsp), %r14
+iaddq    $1, %r14
+rmmovq  %r14, 48(%rsp)
+
+
+T4:
+mrmovq    8(%rsp), %rbx
+
+mrmovq  48(%rsp),%r14
+addq    %r14, %rbx
+
+rrmovq  %rsi, %r13
+rrmovq  %rbx, %r14
+subq    %r13, %r14
+
+#cmpq    %rsi, %rbx
+jge    B3
+
+mrmovq  48(%rsp), %r14
+subq    %rcx, %r14
+#cmpq    %rcx, 48(%rsp)
+jl    L4
+B3:
+mrmovq  40(%rsp),%r14
+iaddq    $1, %r14
+rmmovq  %r14, 40(%rsp)
+
+T3:
+mrmovq    (%rsp), %rbx
+
+mrmovq  40(%rsp),%r14
+addq    %r14, %rbx
+
+rrmovq  %rdx, %r13
+rrmovq  %rbx, %r14
+subq    %r13, %r14
+#cmpq    %rdx, %rbx
+jge    T32
+
+mrmovq  40(%rsp), %r13
+subq    %rcx, %r13
+#cmpq    %rcx, 40(%rsp)
+jge    T32
+
+irmovq  $0, %r14
+rmmovq    %r14, 48(%rsp)
+jmp    T4
+T32:
+mrmovq    40(%rsp), %rbx
+mrmovq  48(%rsp), %r14
+mulq    %r14, %rbx
+
+rrmovq  %rbx, %r13
+andq    %r13, %r13
+#testq    %rbx, %rbx
+je        B22
+B21:
+rmmovq     %rdx, 64(%rsp)
+mrmovq     16(%rsp), %rax
+irmovq     $0, %rdx
+
+rrmovq  %rax, %r14
+rrmovq  %rbx, %r13
+divq    %rbx, %rax
+#Quiotient stored in %rax
+mulq    %rax, %r13
+subq    %r13, %r14
+#Remainder stored in %r14
+rrmovq  %r14, %rdx
+#idivq    %rbx
+
+rmmovb  %rax, 16(%rsp)
+#movb    %al, 16(%rsp)
+
+mrmovq    24(%rsp), %rax
+irmovq    $0, %rdx
+
+
+rrmovq  %rax, %r14
+rrmovq  %rbx, %r13
+divq    %rbx, %rax
+#Quotient stored in %rax
+mulq    %rax, %r13
+subq    %r13, %r14
+rrmovq  %r14, %rdx
+#idivq    %rbx
+rmmovb  %rax, 18(%rsp)
+#movb    %al, 18(%rsp)
+mrmovq    32(%rsp), %rax
+irmovq    $0, %rdx
+
+rrmovq  %rax, %r14
+rrmovq  %rbx, %r13
+divq    %rbx, %rax
+#Quotient stored in %rax
+mulq    %rax, %r13
+subq    %r13, %r14
+rrmovq  %r14, %rdx
+#idivq    %rbx
+rmmovb  %rax, 20(%rsp)
+#movb      %al, 20(%rsp)
+mrmovq     64(%rsp), %rdx
+movq    $0, 40(%rsp)
+jmp    T5
+L6:
+iaddq $-1, %rdx
+rrmovq  %rdx, %rax
+#leaq    -1(%rdx), %rax
+mrmovq  (%rsp), %r14
+subq    %r14, %rax
+
+mrmovq  40(%rsp), %r14
+subq    %r14, %rax
+
+mrmovq  56(%rsp), %r14
+mulq    %r14, %rax
+
+mrmovq    8(%rsp), %rbx
+
+mrmovq  48(%rsp), %r14
+addq    %r14, %rbx
+
+irmovq  $3, %r14
+mulq    %r14, %rbx
+#leaq    (%rbx,%rbx,2), %rbx
+addq    %rbx, %rax
+addq    %rdi, %rax
+
+mrmovb  16(%rsp), %rbx
+rmmovb  %rbx, (%rax)
+mrmovb  18(%rsp), %rbx
+rmmovb  %rbx, 1(%rax)
+mrmovb  20(%rsp), %rbx
+rmmovb  %rbx, 2(%rax)
+
+#movb    16(%rsp), %bl
+#movb    %bl, (%rax)
+#movb    18(%rsp), %bl
+#movb    %bl, 1(%rax)
+#movb    20(%rsp), %bl
+#movb    %bl, 2(%rax)
+
+mrmovq  48(%rsp),%r14
+iaddq   $1, %r14
+rmmovq  %r14, 48(%rsp)
+
+T6:
+mrmovq    8(%rsp), %rbx
+mrmovq  48(%rsp), %r14
+addq     %r14, %rbx
+
+rrmovq  %rsi, %r13
+rrmovq  %rbx, %r14
+subq    %r13, %r14
+#cmpq    %rsi, %rbx
+jge    B5
+
+mrmovq  48(%rsp), %r14
+subq    %rcx, %r14
+#cmpq    %rcx, 48(%rsp)
+jl    L6
+B5:
+mrmovq  40(%rsp), %r14
+iaddq   $1, %r14
+rmmovq  %r14, 40(%rsp)
+
+T5:
+mrmovq    (%rsp), %rbx
+
+mrmovq  40(%rsp), %r14
+addq    %r14, %rbx
+
+rrmovq %rdx, %r13
+rrmovq  %rbx, %r14
+subq    %r13,%r14
+#cmpq    %rdx, %rbx
+jge    B22
+
+mrmovq  40(%rsp), %r14
+subq    %rcx, %r14
+#cmpq    %rcx, 40(%rsp)
+jge    B22
+
+irmovq $0, %r14
+rmmovq    %r14, 48(%rsp)
+jmp    T6
+B22:
+mrmovq  8(%rsp), %r14
+addq    %rcx, %r14
+rmmovq    %r14, 8(%rsp)
+T2:
+mrmovq  8(%rsp), %r13
+subq    %rsi, %r13
+#cmpq    %rsi, 8(%rsp)
+jg    B1
+
+irmovq  $0, %r14
+rmmovq  %r14, 16(%rsp)
+rmmovq    %r14, 24(%rsp)
+rmmovq    %r14, 32(%rsp)
+rmmovq    %r14, 40(%rsp)
+jmp    T3
+B1:
+mrmovq  (%rsp), %r14
+addq    %rcx, %r14
+rmmovq  %r14, (%rsp)
+T1:
+mrmovq  (%rsp), %r13
+subq    %rdx, %r13
+#cmpq    %rdx, (%rsp)
+jg    E0
+
+irmovq  $0, %r14
+rmmovq    %r14, 8(%rsp)
+jmp    T2
+E0:
+
+iaddq     $72, %rsp
+popq    %rbx
+E1:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	#-----------------------------------------------------------------
+
+	ret
